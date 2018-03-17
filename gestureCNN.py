@@ -21,7 +21,7 @@ low_range = np.array([0, 50, 80])
 upper_range = np.array([30, 200, 255])
 
 
-# folder = 'test2'   
+# folder = 'test2'
 # os.mkdir(folder)
 cap =cv2.VideoCapture(0)
 count = 0
@@ -35,15 +35,15 @@ while True:
 
     cv2.rectangle(frame, (x0,y0),(x0+width,y0+height),(0,255,0),1)
     roi = frame[y0:y0+height, x0:x0+width]
-    
+
     hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
-    
+
     #Apply skin color range
     mask = cv2.inRange(hsv, low_range, upper_range)
-    
+
     # mask = cv2.erode(mask, skinkernel, iterations = 1)
     mask = cv2.dilate(mask, skinkernel, iterations = 1)
-    
+
     #blur
     mask1 = cv2.GaussianBlur(mask, (15,15), 1)
     cv2.imshow("Blur", mask1)
@@ -70,7 +70,7 @@ for filename in data_dir_list:
     for im in img_list:
         inp = cv2.imread(data_path+'/' + filename + '/' + im)
         resized_image = cv2.resize(inp, (100,100))
-        img_data_list.append(resized_image) 
+        img_data_list.append(resized_image)
 
 cap.release()
 cv2.releaseAllWindows()
