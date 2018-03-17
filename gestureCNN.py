@@ -13,7 +13,7 @@ import json
 import cv2
 import matplotlib
 
-# from PIL import Image
+from PIL import Image
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 from matplotlib import pyplot as plt
@@ -31,15 +31,129 @@ width = 600
 img_rows, img_cols = 100,100
 img_channels = 1
 batch_size = 32
-nb_classes = 5
+nb_classes = 3
 nb_epoch = 15
 nb_filters = 32
 nb_pool = 2
 nb_conv = 3
 
 path = "./"
-path1 = "./gestures"
-weight_file = ''
+path2 = "./gestures"
+weight_file = 'trained_weights'
+
+output = ['Play', 'Pause', 'up']
+
+
+def modlistdir(path):
+    listing = os.listdir(path)
+    retlist = []
+    for name in listing:
+        #This check is to ignore any hidden files/folders
+        if name.startswith('.'):
+            continue
+        retlist.append(name)
+    return retlist
+
+
+
+def initializers():
+    imlist = modlistdir(path2)
+    
+    image1 = np.array(Image.open(path2 +'/' + imlist[0]))
+    
+    m,n = image1.shape[0:2] 
+    total_images = len(imlist) 
+    
+    immatrix = np.array([np.array(Image.open(path2+ '/' + images).convert('L')).flatten()
+                         for images in imlist], dtype = 'f')
+    
+
+    
+    print(immatrix.shape)
+    
+    input("Press any key")
+    
+    label=np.ones((total_images,),dtype = int)
+    
+   
+    label[0:599]=0
+    label[599:1136]=1
+    label[1136:]=2    
+    
+    data,Label = shuffle(immatrix,label, random_state=2)
+    train_data = [data,Label]
+     
+    (X, y) = (train_data[0],train_data[1])
+     
+     
+    # Split X and y into training and testing sets
+     
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=4)
+     
+    X_train = X_train.reshape(X_train.shape[0], img_channels, img_rows, img_cols)
+    X_test = X_test.reshape(X_test.shape[0], img_channels, img_rows, img_cols)
+     
+    X_train = X_train.astype('float32')
+    X_test = X_test.astype('float32')
+     
+    # normalize
+    X_train /= 255
+    X_test /= 255
+     
+    
+    Y_train = np_utils.to_categorical(y_train, nb_classes)
+    Y_test = np_utils.to_categorical(y_test, nb_classes)
+    return X_train, X_test, Y_train, Y_test
+
+
+
+def trainModel(model):
+
+    # Split X and y into training and testing sets
+    X_train, X_test, Y_train, Y_test = initializers()
+
+    # Now start the training of the loaded model
+    hist = model.fit(X_train, Y_train, batch_size=batch_size, epochs=nb_epoch,
+                 verbose=1, validation_split=0.2)
+
+    visualizeHis(hist)
+
+    
+    filename = weight_file
+    fname = path + str(filename) + ".hdf5"
+    model.save_weights(fname,overwrite=True)
+    
+
+def visualizeHis(hist):
+    train_loss=hist.history['loss']
+    val_loss=hist.history['val_loss']
+    train_acc=hist.history['acc']
+    val_acc=hist.history['val_acc']
+    xc=range(nb_epoch)
+
+    plt.figure(1,figsize=(7,5))
+    plt.plot(xc,train_loss)
+    plt.plot(xc,val_loss)
+    plt.xlabel('num of Epochs')
+    plt.ylabel('loss')
+    plt.title('train_loss vs val_loss')
+    plt.grid(True)
+    plt.legend(['train','val'])
+    #print plt.style.available # use bmh, classic,ggplot for big pictures
+    #plt.style.use(['classic'])
+
+    plt.figure(2,figsize=(7,5))
+    plt.plot(xc,train_acc)
+    plt.plot(xc,val_acc)
+    plt.xlabel('num of Epochs')
+    plt.ylabel('accuracy')
+    plt.title('train_acc vs val_acc')
+    plt.grid(True)
+    plt.legend(['train','val'],loc=4)
+
+    plt.show()
+
+                  
 
 def loadCNN():
     global get_output
@@ -77,15 +191,16 @@ def loadCNN():
     
 
     # fname = weight_file
-    # print "loading ", fname
+    # print("loading ", fname)
     # model.load_weights(fname)
     
     layer = model.layers[11]
     get_output = K.function([model.layers[0].input, K.learning_phase()], [layer.output,])
     
-    
-    return model.get_weights()
+    model.get_weights()
+    model.save_weights(path+str(weight_file))
+    return model
 
 
-x = loadCNN()
-print(x)
+k = loadCNN()
+trainModel(k)
