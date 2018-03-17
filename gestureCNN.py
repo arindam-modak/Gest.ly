@@ -8,12 +8,12 @@ K.set_image_dim_ordering('th')
 
 import numpy as np
 import os
-import theano
+# import theano
 import json
 import cv2
 import matplotlib
 
-from PIL import Image
+# from PIL import Image
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 from matplotlib import pyplot as plt
@@ -41,7 +41,7 @@ path = "./"
 path1 = "./gestures"
 weight_file = ''
 
-def loadCNN(wf_index):
+def loadCNN():
     global get_output
     model = Sequential()
     
@@ -76,14 +76,16 @@ def loadCNN(wf_index):
     plot_model(model, to_file='new_model.png', show_shapes = True)
     
 
-    if wf_index >= 0:
-        #Load pretrained weights
-        fname = weight_file
-        print "loading ", fname
-        model.load_weights(fname)
+    # fname = weight_file
+    # print "loading ", fname
+    # model.load_weights(fname)
     
     layer = model.layers[11]
     get_output = K.function([model.layers[0].input, K.learning_phase()], [layer.output,])
     
     
-    return model
+    return model.get_weights()
+
+
+x = loadCNN()
+print(x)
