@@ -1,6 +1,23 @@
-import cv2
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Activation, Flatten
+from keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D
+from keras.optimizers import SGD,RMSprop,adam
+from keras.utils import np_utils
+from keras import backend as K
+K.set_image_dim_ordering('th')
+
 import numpy as np
 import os
+import theano
+import json
+import cv2
+import matplotlib
+
+from PIL import Image
+from sklearn.utils import shuffle
+from sklearn.model_selection import train_test_split
+from matplotlib import pyplot as plt
+
 
 minValue = 70
 
@@ -8,69 +25,65 @@ x0 = 400
 y0 = 200
 height = 600
 width = 600
-PATH = os.getcwd()
-data_path = PATH+'/data'
-data_dir_list = os.listdir(data_path)
-    # global guessGesture, visualize, mod, lastgesture, saveImg
-    # HSV values
-kernel = np.ones((15,15),np.uint8)
-kernel2 = np.ones((1,1),np.uint8)
-skinkernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
-
-low_range = np.array([0, 50, 80])
-upper_range = np.array([30, 200, 255])
-
-
-# folder = 'test2'
-# os.mkdir(folder)
-cap =cv2.VideoCapture(0)
-count = 0
 
 
 
-while True:
-    ret, frame = cap.read()
+img_rows, img_cols = 100,100
+img_channels = 1
+batch_size = 32
+nb_classes = 5
+nb_epoch = 15
+nb_filters = 32
+nb_pool = 2
+nb_conv = 3
 
-    cv2.imshow('frame', frame)
+path = "./"
+path1 = "./gestures"
+weight_file = ''
 
-    cv2.rectangle(frame, (x0,y0),(x0+width,y0+height),(0,255,0),1)
-    roi = frame[y0:y0+height, x0:x0+width]
+def loadCNN(wf_index):
+    global get_output
+    model = Sequential()
+    
+    
+    model.add(Conv2D(nb_filters, (nb_conv, nb_conv),
+                        padding='valid',
+                        input_shape=(img_channels, img_rows, img_cols)))
+    convout1 = Activation('relu')
+    model.add(convout1)
+    model.add(Conv2D(nb_filters, (nb_conv, nb_conv)))
+    convout2 = Activation('relu')
+    model.add(convout2)
+    model.add(MaxPooling2D(pool_size=(nb_pool, nb_pool)))
+    model.add(Dropout(0.5))
 
-    hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+    model.add(Flatten())
+    model.add(Dense(128))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(nb_classes))
+    model.add(Activation('softmax'))
 
-    #Apply skin color range
-    mask = cv2.inRange(hsv, low_range, upper_range)
+    model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+    
+    
+    
+    model.summary()
 
-    # mask = cv2.erode(mask, skinkernel, iterations = 1)
-    mask = cv2.dilate(mask, skinkernel, iterations = 1)
+    model.get_config()
+    
+    from keras.utils import plot_model
+    plot_model(model, to_file='new_model.png', show_shapes = True)
+    
 
-    #blur
-    mask1 = cv2.GaussianBlur(mask, (15,15), 1)
-    cv2.imshow("Blur", mask1)
-
-    #bitwise and mask original frame
-    res = cv2.bitwise_and(roi, roi, mask = mask1)
-    # color to grayscale
-    res = cv2.cvtColor(res, cv2.COLOR_BGR2GRAY)
-    cv2.imshow('res',res)
-
-
-    #Used to create gesture images
-    # cv2.imwrite(os.path.join(folder,"frame{:d}.jpg".format(count)), res)     # save frame as JPEG file
-    # count += 1
-    k = cv2.waitKey(5) & 0xFF
-    if k==27:
-        break
-
-# print("{} images are extacted in {}.".format(count,folder))
-
-img_data_list = []
-for filename in data_dir_list:
-    img_list = os.listdir(data_path+'/'+ filename)
-    for im in img_list:
-        inp = cv2.imread(data_path+'/' + filename + '/' + im)
-        resized_image = cv2.resize(inp, (100,100))
-        img_data_list.append(resized_image)
-
-cap.release()
-cv2.releaseAllWindows()
+    if wf_index >= 0:
+        #Load pretrained weights
+        fname = weight_file
+        print "loading ", fname
+        model.load_weights(fname)
+    
+    layer = model.layers[11]
+    get_output = K.function([model.layers[0].input, K.learning_phase()], [layer.output,])
+    
+    
+    return model
