@@ -145,29 +145,52 @@ if __name__ == "__main__":
 
   # print('\nEvaluation time (1-image): {:.3f}s\n'.format(end-start))
 
-  # for i in top_k:
-  #   print(labels[i], results[i])
+  for i in top_k:
+    print(labels[i], results[i])
 
   x = labels[top_k[0]].split(" ")[1]
+  y = results[top_k[0]]
 
+  # y = 0.91
+  print(x)
   x = int(x)
+  y = float(y)
+  print(y)
 
-  if(x == 1):
+  # if(results[0] >= 0.9 || results[1] >= 0.9 || results[2] >= 0.9):
+
+  if(x == 1 and y >= 0.7):
     print("PAUSE")
+
     keyboard = Controller()
-    keyboard.press('space')
+    keyboard.press(Key.space)
+    keyboard.release(Key.space)
 
-  elif(x == 2):
-    print("STOP")
+
+  elif(x == 2 and y >= 0.8):
+    print("Go back")
     keyboard = Controller()
-    keyboard.press('a')
+    keyboard.press(Key.alt)
+    keyboard.press(Key.left)
+    keyboard.release(Key.alt)
+    keyboard.release(Key.left)
 
-  else:
-    print("FORWARD") 
+
+  elif(x == 3 and y >= 0.7):
+    print("New Tab") 
     keyboard = Controller()
-    keyboard.press('c')
+    keyboard.press(Key.ctrl)
+    keyboard.press('t')
+    keyboard.release(Key.ctrl)
+    keyboard.release('t')
 
-
+  elif(x == 4 and y >= 0.7):
+    print("Close Tab") 
+    keyboard = Controller()
+    keyboard.press(Key.ctrl)
+    keyboard.press('w')
+    keyboard.release(Key.ctrl)
+    keyboard.release('w')  
   # xx = labels[top_k[0]].split(" ")[1]
 
   # func(xx)
