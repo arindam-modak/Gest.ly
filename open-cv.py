@@ -19,7 +19,7 @@ count = 0
 low_range = np.array([0, 50, 80])
 upper_range = np.array([30, 200, 255])
 
-
+counter = 0
 cap = cv2.VideoCapture(0) 
 
 while True:
@@ -55,9 +55,11 @@ while True:
     cv2.imwrite(os.path.join('scripts/test',"frame{:d}.jpg".format(count)), res)     
 
     # print(labelImg.func())
-    os.system("python -m scripts.label_image --image=scripts/test/frame0.jpg")
+    if counter%50==0:
+        os.system("python -m scripts.label_image --image=scripts/test/frame0.jpg")
     #print(result)
     k = cv2.waitKey(5) & 0xFF
+    counter+=1
     if k==27:
         break
 

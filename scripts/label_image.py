@@ -21,8 +21,14 @@ import argparse
 import sys
 import time
 
+
 import numpy as np
 import tensorflow as tf
+import Xlib
+import pyautogui
+import os
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 def load_graph(model_file):
   graph = tf.Graph()
@@ -130,12 +136,43 @@ if __name__ == "__main__":
   top_k = results.argsort()[-5:][::-1]
   labels = load_labels(label_file)
 
-  print('\nEvaluation time (1-image): {:.3f}s\n'.format(end-start))
+  # print('\nEvaluation time (1-image): {:.3f}s\n'.format(end-start))
 
-  for i in top_k:
-    print(labels[i], results[i])
+  # for i in top_k:
+  #   print(labels[i], results[i])
 
-  print(labels[top_k[0]].split(" ")[1]) 
+  x = labels[top_k[0]].split(" ")[1]
+
+  x = int(x)
+
+  from subprocess import Popen, PIPE
+
+  control_f4_sequence = '''keydown A
+  '''
+
+  shift_a_sequence = '''keydown Shift_L
+  key A
+  keyup Shift_L
+  '''
+
+  def keypress(sequence):
+      p = Popen(['xte'], stdin=PIPE)
+      p.communicate(input=sequence)
+
+  #keypress(shift_a_sequence)
+  keypress(control_f4_sequence)
+
+
+  if(x == 1):
+    print("PAUSE")
+
+  elif(x == 2):
+    print("STOP")
+    pyautogui.typewrite('args')
+
+  else:
+    print("FORWARD") 
+
 
   # xx = labels[top_k[0]].split(" ")[1]
 
