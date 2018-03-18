@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from pynput.keyboard import Key, Controller
 
 import argparse
 import sys
@@ -29,6 +30,12 @@ import pyautogui
 import os
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+# device = uinput.Device([
+#         uinput.KEY_E,
+#         uinput.KEY_H,
+#         uinput.KEY_L,
+#         uinput.KEY_O,
+#         ])
 
 def load_graph(model_file):
   graph = tf.Graph()
@@ -145,33 +152,20 @@ if __name__ == "__main__":
 
   x = int(x)
 
-  from subprocess import Popen, PIPE
-
-  control_f4_sequence = '''keydown A
-  '''
-
-  shift_a_sequence = '''keydown Shift_L
-  key A
-  keyup Shift_L
-  '''
-
-  def keypress(sequence):
-      p = Popen(['xte'], stdin=PIPE)
-      p.communicate(input=sequence)
-
-  #keypress(shift_a_sequence)
-  keypress(control_f4_sequence)
-
-
   if(x == 1):
     print("PAUSE")
+    keyboard = Controller()
+    keyboard.press('space')
 
   elif(x == 2):
     print("STOP")
-    pyautogui.typewrite('args')
+    keyboard = Controller()
+    keyboard.press('a')
 
   else:
     print("FORWARD") 
+    keyboard = Controller()
+    keyboard.press('c')
 
 
   # xx = labels[top_k[0]].split(" ")[1]
